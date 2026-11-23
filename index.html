@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zone Self-Check</title>
+<style>
+  :root{
+    --bg:#0b0d0a;
+    --panel:#12150f;
+    --panel2:#0e110c;
+    --line:#2a2f24;
+    --txt:#cfd2c6;
+    --dim:#8b9182;
+    --amber:#c8a13a;
+    --green:#8fae6a;
+    --mono:"Consolas","SFMono-Regular","Roboto Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #1a1f16 0%, transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, #14170f 0%, transparent 55%),
+      var(--bg);
+    color:var(--txt);
+    font:16px/1.6 "Segoe UI","Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px 72px}
+  .brand{
+    font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--dim);display:flex;justify-content:space-between;gap:12px;align-items:baseline;
+    border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:28px;
+  }
+  .brand b{color:var(--green);font-weight:600}
+  .bar{height:3px;background:var(--line);overflow:hidden;border-radius:2px}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--amber));transition:width .35s ease}
+  .meta{
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--dim);margin:10px 0 22px;display:flex;justify-content:space-between;
+  }
+  .card{
+    border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 40%),var(--panel);
+    padding:32px;border-radius:4px;
+    animation:in .28s ease both;
+  }
+  @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  h1{
+    font-size:26px;line-height:1.25;margin:0 0 14px;font-weight:600;letter-spacing:.01em;
+  }
+  h1 span{color:var(--amber)}
+  p.lead{color:var(--dim);margin:0 0 18px}
+  .qnum{
+    font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--amber);
+    text-transform:uppercase;margin-bottom:14px;
+  }
+  .qtext{font-size:21px;line-height:1.45;margin:0 0 22px;font-weight:500}
+  textarea{
+    width:100%;min-height:150px;background:var(--panel2);color:var(--txt);
+    border:1px solid var(--line);border-radius:3px;padding:14px 16px;
+    font:15px/1.6 inherit;resize:vertical;outline:none;transition:border-color .2s;
+  }
+  textarea:focus{border-color:var(--green)}
+  textarea::placeholder{color:#5d6456}
+  .hint{font-family:var(--mono);font-size:11px;color:#5d6456;margin-top:8px;letter-spacing:.06em}
+  .scale{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:6px 0 4px}
+  .scale button{
+    aspect-ratio:1/1;min-height:44px;background:var(--panel2);border:1px solid var(--line);
+    color:var(--dim);font-family:var(--mono);font-size:15px;cursor:pointer;border-radius:3px;
+    transition:.15s;
+  }
+  .scale button:hover{border-color:var(--green);color:var(--txt)}
+  .scale button.on{background:rgba(200,161,58,.14);border-color:var(--amber);color:var(--amber);font-weight:700}
+  .scale-ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:#5d6456;letter-spacing:.1em;margin-top:6px;text-transform:uppercase}
+  .nav{display:flex;gap:10px;justify-content:space-between;margin-top:26px;flex-wrap:wrap}
+  .btn{
+    font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    padding:12px 20px;border-radius:3px;cursor:pointer;transition:.18s;
+    background:transparent;border:1px solid var(--amber);color:var(--amber);
+  }
+  .btn:hover{background:rgba(200,161,58,.12)}
+  .btn:disabled{opacity:.35;cursor:not-allowed;background:transparent}
+  .btn.ghost{border-color:var(--line);color:var(--dim)}
+  .btn.ghost:hover{border-color:var(--dim);color:var(--txt);background:rgba(255,255,255,.03)}
+  .btn.green{border-color:var(--green);color:var(--green)}
+  .btn.green:hover{background:rgba(143,174,106,.12)}
+  label.field{display:block;margin-bottom:20px}
+  label.field span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
+  input[type=text]{
+    width:100%;background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    border-radius:3px;padding:12px 14px;font:15px inherit;outline:none;transition:border-color .2s;
+  }
+  input[type=text]:focus{border-color:var(--green)}
+  ul.rules{list-style:none;padding:0;margin:0 0 26px}
+  ul.rules li{padding:9px 0 9px 24px;position:relative;color:var(--dim);border-bottom:1px solid rgba(42,47,36,.6)}
+  ul.rules li:last-child{border-bottom:none}
+  ul.rules li:before{content:"›";position:absolute;left:4px;color:var(--green);font-family:var(--mono)}
+  ul.rules li b{color:var(--txt);font-weight:600}
+  .answers{margin:0;padding:0;list-style:none}
+  .answers li{
+    border:1px solid var(--line);border-left:2px solid var(--green);background:rgba(255,255,255,.015);
+    padding:14px 16px;margin-bottom:10px;border-radius:3px;
+  }
+  .answers .qa{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between;gap:10px}
+  .answers .qq{color:var(--txt);font-size:14.5px;margin:6px 0 8px;opacity:.85}
+  .answers .an{white-space:pre-wrap;font-size:15.5px;color:var(--green)}
+  .answers .an.empty{color:#5d6456;font-style:italic}
+  .edit{
+    background:none;border:none;color:var(--amber);cursor:pointer;font-family:var(--mono);
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:0;
+  }
+  .edit:hover{text-decoration:underline}
+  .foot{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:#4c5245;text-align:center;margin-top:32px;text-transform:uppercase}
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:#1b2016;border:1px solid var(--green);color:var(--green);
+    font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    padding:11px 18px;border-radius:3px;transition:.25s;z-index:50;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  @media(max-width:560px){
+    .wrap{padding:26px 14px 56px}
+    .card{padding:22px 18px}
+    h1{font-size:22px}
+    .qtext{font-size:18.5px}
+    .scale{gap:4px}
+    .scale button{min-height:38px;font-size:13.5px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><b>ЗОНА</b><span>Self-Check / 12 prompts</span></div>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="meta"><span id="mLeft">—</span><span id="mRight"></span></div>
+  <div id="app"></div>
+  <div class="foot">No scores · No verdicts · Answers stay on your device</div>
+</div>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var QUESTIONS = [
+    {id:1,  type:"text",  text:"How often do you think from your character's perspective, and do you notice the difference?",
+      ph:"When does the switch happen? What gives it away?"},
+    {id:2,  type:"text",  text:"When you're not thinking as your character, what are you thinking about?",
+      ph:"What fills the space between the scenes?"},
+    {id:3,  type:"text",  text:"If there were no friends in Discord talking out of character, how would your thinking change?",
+      ph:"Be honest — what would shift, what would disappear?"},
+    {id:4,  type:"text",  text:"Which events in your character's life make them do what they do?",
+      ph:"Name the events and the behaviour they produce."},
+    {id:5,  type:"text",  text:"When was the last time you made an in-game decision based on your character's psychological traumas and past experiences?",
+      ph:"Describe the moment and the decision it produced."},
+    {id:6,  type:"text",  text:"How does your character's backstory predetermine their attitude toward other stalkers in the Zone?",
+      ph:"Trust, contempt, fear, debt — where does it come from?"},
+    {id:7,  type:"text",  text:"When was the last time your decision about what to do went against what your character would have wanted?",
+      ph:"What did you want, what did they want, who won?"},
+    {id:8,  type:"text",  text:"Which imagined circumstances of your character make you fall in love with them, and how does that relate to your own life experience?",
+      ph:"What about them hooks you — and why that?"},
+    {id:9,  type:"scale", text:"On a scale from 1 to 10, how similar are you to your character?", noSkip:false},
+    {id:10, type:"text",  text:"What is the main difference between you as a person and your character — not counting life experience?",
+      ph:"Temperament, values, reflexes, the way you handle fear?"},
+    {id:11, type:"text",  text:"Which qualities would you like to adopt from your character?",
+      ph:"What do they have that you'd want in real life?"},
+    {id:12, type:"text",  text:"Which flaws do you see in your character that you'd like to get rid of in real life?",
+      ph:"What would you rather not carry over?"}
+  ];
+
+  var KEY = "zone-selfcheck-v1";
+
+  var store = {
+    read: function(){
+      try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch(e){ return null; }
+    },
+    write: function(v){
+      try { localStorage.setItem(KEY, JSON.stringify(v)); } catch(e){}
+    },
+    clear: function(){ try { localStorage.removeItem(KEY); } catch(e){} }
+  };
+
+  var saved = store.read() || {};
+  var state = {
+    screen: "intro",
+    idx: 0,
+    name: saved.name || "",
+    answers: saved.answers || {}
+  };
+
+  var app = document.getElementById("app");
+  var prog = document.getElementById("prog");
+  var mLeft = document.getElementById("mLeft");
+  var mRight = document.getElementById("mRight");
+
+  function persist(){ store.write({name:state.name, answers:state.answers}); }
+
+  function esc(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
+  }
+
+  function answerOf(q){ return state.answers[q.id] != null ? String(state.answers[q.id]) : ""; }
+  function answeredCount(){
+    return QUESTIONS.filter(function(q){
+      var v = state.answers[q.id];
+      return v != null && String(v).trim() !== "";
+    }).length;
+  }
+
+  function chrome(){
+    if (state.screen === "intro"){
+      prog.style.width = "0%";
+      mLeft.textContent = "Ready";
+      mRight.textContent = QUESTIONS.length + " prompts";
+      return;
+    }
+    if (state.screen === "done"){
+      prog.style.width = "100%";
+      mLeft.textContent = "Complete";
+      mRight.textContent = answeredCount() + " / " + QUESTIONS.length + " answered";
+      return;
+    }
+    var n = state.idx + 1;
+    prog.style.width = ((state.idx) / QUESTIONS.length * 100).toFixed(2) + "%";
+    mLeft.textContent = "Question " + n + " of " + QUESTIONS.length;
+    mRight.textContent = answeredCount() + " answered";
+  }
+
+  /* ---------- INTRO ---------- */
+  function renderIntro(){
+    chrome();
+    app.innerHTML =
+      '<div class="card">' +
+        '<h1>Character <span>Self-Check</span></h1>' +
+        '<p class="lead">Twelve questions about how you think as your character — and how your character lives in your head. It is a mirror, not a test.</p>' +
+        '<ul class="rules">' +
+          '<li><b>Nothing is scored.</b> No results, no types, no grades at the end — only your own answers.</li>' +
+          '<li><b>Nothing is sent anywhere.</b> Everything stays in this browser tab; the page has no server.</li>' +
+          '<li><b>Answer for yourself.</b> Write plainly, one or two sentences is enough. Long is fine too.</li>' +
+          '<li><b>You can go back</b> and rewrite any answer before you finish.</li>' +
+        '</ul>' +
+        '<label class="field"><span>Your name or character name (optional)</span>' +
+          '<input type="text" id="nameIn" placeholder="e.g. Sokol" value="' + esc(state.name) + '" autocomplete="off">' +
+        '</label>' +
+        '<div class="nav"><span></span><span id="navRight"></span></div>' +
+      '</div>';
+
+    var navRight = document.getElementById("navRight");
+    var done = answeredCount();
+    var allDone = done === QUESTIONS.length;
+
+    if (done > 0){
+      navRight.innerHTML =
+        '<button class="btn ghost" id="restartBtn" style="margin-right:8px">Start over</button>' +
+        '<button class="btn" id="startBtn">' +
+          (allDone ? "Review answers" : "Continue " + done + "/" + QUESTIONS.length) +
+        '</button>';
+      document.getElementById("restartBtn").addEventListener("click", function(){
+        if (!confirm("Clear all answers and start over?")) return;
+        state.answers = {}; state.name = ""; state.idx = 0;
+        store.clear();
+        render();
+      });
+    } else {
+      navRight.innerHTML = '<button class="btn" id="startBtn">Begin</button>';
+    }
+
+    var nameIn = document.getElementById("nameIn");
+    nameIn.addEventListener("input", function(){ state.name = nameIn.value; persist(); });
+    nameIn.addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); start(); } });
+    document.getElementById("startBtn").addEventListener("click", start);
+
+    function start(){
+      if (allDone){ state.screen = "done"; render(); return; }
+      state.screen = "q";
+      state.idx = 0;
+      if (done > 0){
+        for (var i = 0; i < QUESTIONS.length; i++){
+          var v = state.answers[QUESTIONS[i].id];
+          if (v == null || String(v).trim() === ""){ state.idx = i; break; }
+        }
+      }
+      render();
+    }
+  }
+
+  /* ---------- QUESTION ---------- */
+  function renderQuestion(){
+    chrome();
+    var q = QUESTIONS[state.idx];
+    var val = answerOf(q);
+    var html = '<div class="card">' +
+      '<div class="qnum">Prompt ' + String(state.idx + 1).padStart(2, "0") + '</div>' +
+      '<div class="qtext">' + esc(q.text) + '</div>';
+
+    if (q.type === "scale"){
+      html += '<div class="scale" id="scale">';
+      for (var i = 1; i <= 10; i++){
+        html += '<button type="button" data-v="' + i + '"' + (String(i) === val ? ' class="on"' : '') + '>' + i + '</button>';
+      }
+      html += '</div><div class="scale-ends"><span>Not at all like me</span><span>Exactly me</span></div>';
+    } else {
+      html += '<textarea id="ta" placeholder="' + esc(q.ph || "") + '">' + esc(val) + '</textarea>' +
+              '<div class="hint">Ctrl + Enter — next</div>';
+    }
+
+    html += '<div class="nav">' +
+      '<button class="btn ghost" id="backBtn">' + (state.idx === 0 ? "Intro" : "Back") + '</button>' +
+      '<button class="btn' + (q.type === "scale" && val ? "" : "") + '" id="nextBtn"' + (q.type === "scale" ? (val ? "" : " disabled") : "") + '>' +
+        (state.idx === QUESTIONS.length - 1 ? "Finish" : "Next") +
+      '</button></div></div>';
+
+    app.innerHTML = html;
+
+    var nextBtn = document.getElementById("nextBtn");
+
+    if (q.type === "scale"){
+      var scale = document.getElementById("scale");
+      scale.addEventListener("click", function(e){
+        var b = e.target.closest("button[data-v]");
+        if (!b) return;
+        state.answers[q.id] = Number(b.dataset.v);
+        persist();
+        [].forEach.call(scale.children, function(ch){ ch.classList.toggle("on", ch === b); });
+        nextBtn.disabled = false;
+        chrome();
+      });
+    } else {
+      var ta = document.getElementById("ta");
+      ta.addEventListener("input", function(){
+        state.answers[q.id] = ta.value;
+        persist();
+        chrome();
+        nextBtn.disabled = ta.value.trim() === "";
+        autogrow(ta);
+      });
+      nextBtn.disabled = val.trim() === "";
+      ta.addEventListener("keydown", function(e){
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)){
+          e.preventDefault();
+          if (ta.value.trim() !== "") goNext();
+        }
+      });
+      setTimeout(function(){ try { ta.focus(); } catch(e){} }, 40);
+      autogrow(ta);
+    }
+
+    function autogrow(el){ el.style.height = "auto"; el.style.height = Math.max(150, el.scrollHeight + 2) + "px"; }
+
+    document.getElementById("backBtn").addEventListener("click", goBack);
+    nextBtn.addEventListener("click", goNext);
+  }
+
+  function goBack(){
+    if (state.idx === 0){ state.screen = "intro"; }
+    else { state.idx--; }
+    render();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  function goNext(){
+    if (state.idx === QUESTIONS.length - 1){ state.screen = "done"; }
+    else { state.idx++; }
+    render();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  /* ---------- DONE ---------- */
+  function renderDone(){
+    chrome();
+    var who = state.name.trim();
+    var html = '<div class="card">' +
+      '<h1>Your <span>answers</span></h1>' +
+      (who ? '<p class="lead" style="margin-top:-6px"><b style="color:var(--txt)">' + esc(who) + '</b> — here is what you wrote.</p>' : '') +
+      '<p class="lead">That is the whole thing — no verdict follows. Read them back, rewrite anything that does not ring true, then copy or screenshot.</p>' +
+      '<ul class="answers">';
+
+    QUESTIONS.forEach(function(q, i){
+      var a = answerOf(q).trim();
+      html += '<li>' +
+        '<div class="qa"><span>Prompt ' + String(i + 1).padStart(2, "0") + '</span>' +
+        '<button class="edit" data-i="' + i + '">Rewrite</button></div>' +
+        '<div class="qq">' + esc(q.text) + '</div>' +
+        '<div class="an' + (a ? "" : " empty") + '">' + (a ? esc(a) : "— not answered —") + '</div>' +
+      '</li>';
+    });
+
+    html += '</ul>' +
+      '<div class="nav">' +
+        '<button class="btn ghost" id="againBtn">Start over</button>' +
+        '<button class="btn green" id="copyBtn">Copy all answers</button>' +
+      '</div></div>';
+
+    app.innerHTML = html;
+
+    app.addEventListener("click", function(e){
+      var ed = e.target.closest("button.edit");
+      if (!ed) return;
+      state.idx = Number(ed.dataset.i);
+      state.screen = "q";
+      render();
+      window.scrollTo({top:0, behavior:"smooth"});
+    });
+
+    document.getElementById("copyBtn").addEventListener("click", copyAll);
+
+    document.getElementById("againBtn").addEventListener("click", function(){
+      if (!confirm("Clear all answers and start over?")) return;
+      state.answers = {}; state.name = ""; state.idx = 0; state.screen = "intro";
+      store.clear();
+      render();
+      window.scrollTo({top:0, behavior:"smooth"});
+    });
+  }
+
+  function buildText(){
+    var out = "";
+    if (state.name.trim()) out += state.name.trim() + "\n\n";
+    QUESTIONS.forEach(function(q, i){
+      var a = answerOf(q).trim();
+      out += (i + 1) + ". " + q.text + "\n" +
+             (a ? a : "—") + "\n\n";
+    });
+    return out.trim();
+  }
+
+  function copyAll(){
+    var text = buildText();
+    var done = function(){ toast("Copied to clipboard"); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+
+    function fallback(){
+      var t = document.createElement("textarea");
+      t.value = text;
+      t.style.position = "fixed"; t.style.left = "-9999px";
+      document.body.appendChild(t);
+      t.select();
+      try { document.execCommand("copy"); done(); } catch(e){ toast("Copy failed — select manually"); }
+      document.body.removeChild(t);
+    }
+  }
+
+  var toastTimer = null;
+  function toast(msg){
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove("on"); }, 1800);
+  }
+
+  /* ---------- ROUTER ---------- */
+  function render(){
+    if (state.screen === "intro") renderIntro();
+    else if (state.screen === "done") renderDone();
+    else renderQuestion();
+    chrome();
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
